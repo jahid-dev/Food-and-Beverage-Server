@@ -1,6 +1,6 @@
 const express = require("express");
 const cors = require('cors');
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express();
 const port = process.env.PORT || 5000
 
@@ -25,20 +25,48 @@ const client = new MongoClient(uri, {
   }
 });
 
-
-
 const foodBrandsCollection = client.db('foodsBrandDB').collection('foodCompany');
 
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
-    app.get('/foodCompany', async(req,res)=>{
+
+    const foodProductsCollection = client.db("foodsBrandDB").collection("products");
+
+   //get data from server and set to client
+   app.post('/product', async (req, res) => {
+    const brandFood = req.body
+    console.log(brandFood);
+    const result = await foodProductsCollection.insertOne(brandFood)
+    res.send(result)
+  })
+
+  app.get('/product', async (req, res) => {
+    const cursor = foodProductsCollection.find()
+    const result = await cursor.toArray()
+    res.send(result)
+  })
+
+  app.get('/product/:id', async (req, res) =>{
+    const id = req.params.id
+    const query = {_id: new ObjectId(id)}
+    const result = await foodProductsCollection.findOne(query)
+    res.send(result)
+  })
+
+     //send data to home page featured card
+     app.get('/foodCompany', async(req,res)=>{
         const cursor = foodBrandsCollection.find();
       const result = await cursor.toArray();
       res.send(result);
     })
-   
+    app.get('/foodCompany/:id', async (req, res) => {
+        const id= req.params.id
+        const query = {_id: new ObjectId(id)}
+        const foodBrand = await foodBrandsCollection.findOne(query)
+        res.send(foodBrand);
+      })
 
 
     // Send a ping to confirm a successful connection

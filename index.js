@@ -33,8 +33,17 @@ async function run() {
     await client.connect();
 
     const foodProductsCollection = client.db("foodsBrandDB").collection("products");
-
+    const cartCollection = client.db("foodsBrandDB").collection("carts")
    //get data from server and set to client
+
+   app.post('/cart', async (req, res) => {
+    const cartProduct = req.body
+    console.log(cartProduct);
+    const result = await cartCollection.insertOne(cartProduct)
+    res.send(result)
+  })
+
+
    app.post('/product', async (req, res) => {
     const brandFood = req.body
     console.log(brandFood);
@@ -68,6 +77,25 @@ async function run() {
         res.send(foodBrand);
       })
 
+      app.put('/product/:id', async (req, res) =>{
+        const id = req.params.id
+        const filter = {_id: new ObjectId(id)}
+        const options = {upsert: true} 
+        const updatedProduct = req.body
+        const product = {
+          $set: {
+             ProductName: updatedProduct.ProductName,
+             productCompany: updatedProduct.productCompany,  
+             ProductType: updatedProduct.ProductType, 
+             price: updatedProduct.price, 
+             description: updatedProduct.description, 
+             rating: updatedProduct.rating, 
+             photo: updatedProduct.photo
+          }
+        }
+        const result = await foodProductsCollection.updateOne(filter, product, options)
+        res.send(result)
+      })
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
